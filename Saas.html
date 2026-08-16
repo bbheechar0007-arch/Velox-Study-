@@ -1,0 +1,1580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Velox Study - Pro Aspirant Portal</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+<style>
+.app-view { display: none; }
+.app-view.active { display: block; animation: fadeIn 0.3s ease-in-out; }
+@keyframes fadeIn {
+from { opacity: 0; transform: translateY(4px); }
+to { opacity: 1; transform: translateY(0); }
+}
+.stream-card:hover { transform: translateY(-5px); transition: all 0.3s; }
+.streak-fire { animation: pulse-fire 1.5s infinite; }
+@keyframes pulse-fire {
+0% { transform: scale(1); color: #f97316; }
+50% { transform: scale(1.2); color: #ef4444; }
+100% { transform: scale(1); color: #f97316; }
+}
+.progress-ring__circle { transition: stroke-dashoffset 0.6s ease-in-out; transform: rotate(-90deg); transform-origin: 50% 50%; }
+
+body.theme-light { background-color: #f3f4f6; color: #1f2937; }
+body.theme-dark { background-color: #0f172a; color: #f8fafc; }
+body.theme-dark .bg-white { background-color: #1e293b !important; color: #f8fafc !important; border-color: #334155 !important; }
+body.theme-dark .bg-gray-50, body.theme-dark .bg-gray-100 { background-color: #0f172a !important; color: #f8fafc !important; border-color: #334155 !important; }
+body.theme-dark input, body.theme-dark select, body.theme-dark textarea { background-color: #0f172a !important; color: #f8fafc !important; border-color: #334155 !important; }
+body.theme-dark table tr th, body.theme-dark table tr td { border-color: #334155 !important; }
+
+body.theme-reading { background-color: #fbf0d9; color: #433422; }
+body.theme-reading .bg-white { background-color: #f5e6cb !important; color: #433422 !important; border-color: #e0cca8 !important; }
+body.theme-reading .bg-gray-50, body.theme-reading .bg-gray-100 { background-color: #fbf0d9 !important; color: #433422 !important; border-color: #e0cca8 !important; }
+body.theme-reading input, body.theme-reading select, body.theme-reading textarea { background-color: #fbf0d9 !important; color: #433422 !important; border-color: #e0cca8 !important; }
+
+body.theme-colourful { background: linear-gradient(135deg, #e0e7ff 0%, #fae8ff 100%); color: #31105c; }
+body.theme-colourful .bg-white { background-color: rgba(255, 255, 255, 0.9) !important; color: #31105c !important; border-color: #d8b4fe !important; backdrop-filter: blur(10px); }
+body.theme-colourful .bg-gray-50, body.theme-colourful .bg-gray-100 { background-color: rgba(243, 232, 255, 0.5) !important; color: #31105c !important; border-color: #d8b4fe !important; }
+</style>
+</head>
+<body class="theme-light min-h-screen font-sans flex flex-col transition-colors duration-300">
+
+<!-- Top Navigation Bar -->
+<nav class="bg-blue-600 text-white shadow-md px-6 py-4 sticky top-0 z-50">
+<div class="max-w-7xl mx-auto flex justify-between items-center">
+<h1 class="text-xl font-black tracking-wider cursor-pointer flex items-center gap-2"><i class="fa-solid fa-graduation-cap"></i> Velox Study</h1>
+
+<div id="nav-user-info" class="hidden flex items-center gap-3">
+<div class="hidden md:flex items-center gap-1 bg-blue-700 p-1.5 rounded-xl border border-blue-500 shadow-inner">
+<button onclick="switchAppView('dashboard-page')" id="nav-btn-dashboard" class="px-3 py-1.5 text-xs font-bold rounded-lg bg-white text-blue-700 shadow transition"><i class="fa-solid fa-chart-pie mr-1"></i> Dashboard</button>
+<button onclick="switchAppView('syllabus-page')" id="nav-btn-syllabus" class="px-3 py-1.5 text-xs font-bold rounded-lg text-white hover:bg-blue-600 transition"><i class="fa-solid fa-book-open mr-1"></i> Syllabus</button>
+<button onclick="switchAppView('test-page')" id="nav-btn-test" class="px-3 py-1.5 text-xs font-bold rounded-lg text-white hover:bg-blue-600 transition"><i class="fa-solid fa-file-pen mr-1"></i> Test</button>
+<button onclick="switchAppView('velobook-page')" id="nav-btn-velobook" class="px-3 py-1.5 text-xs font-bold rounded-lg text-white hover:bg-blue-600 transition"><i class="fa-solid fa-users mr-1"></i> Velobook</button>
+</div>
+
+<select id="theme-selector" onchange="setTheme(this.value)" class="bg-blue-700 text-white text-xs font-bold rounded-lg px-2.5 py-1.5 outline-none border border-blue-500 cursor-pointer">
+<option value="light">☀️ Light</option>
+<option value="dark">🌙 Dark</option>
+<option value="reading">📜 Reading</option>
+<option value="colourful">🎨 Colourful</option>
+</select>
+
+<div class="flex items-center gap-1.5 bg-blue-700/60 px-3 py-1.5 rounded-full border border-blue-500 text-xs" title="Streak">
+<i class="fa-solid fa-fire streak-fire text-orange-400"></i>
+<span id="nav-streak-count" class="font-bold">0</span>
+</div>
+
+<button onclick="logout()" class="bg-red-500 hover:bg-red-600 px-3 py-1.5 rounded-lg shadow text-xs font-bold transition">Logout</button>
+</div>
+</div>
+</nav>
+
+<!-- Mobile Bottom Navigation Bar -->
+<div id="mobile-bottom-nav" class="hidden md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 p-2 flex justify-around shadow-lg">
+<button onclick="switchAppView('dashboard-page')" id="mob-btn-dashboard" class="flex flex-col items-center text-blue-600 text-[10px] font-bold py-1 px-2"><i class="fa-solid fa-chart-pie text-base mb-0.5"></i> Dashboard</button>
+<button onclick="switchAppView('syllabus-page')" id="mob-btn-syllabus" class="flex flex-col items-center text-gray-500 text-[10px] font-bold py-1 px-2"><i class="fa-solid fa-book-open text-base mb-0.5"></i> Syllabus</button>
+<button onclick="switchAppView('test-page')" id="mob-btn-test" class="flex flex-col items-center text-gray-500 text-[10px] font-bold py-1 px-2"><i class="fa-solid fa-file-pen text-base mb-0.5"></i> Test</button>
+<button onclick="switchAppView('velobook-page')" id="mob-btn-velobook" class="flex flex-col items-center text-gray-500 text-[10px] font-bold py-1 px-2"><i class="fa-solid fa-users text-base mb-0.5"></i> Velobook</button>
+</div>
+
+<!-- Main App Container -->
+<main class="flex-grow flex items-center justify-center p-4 md:p-6 mb-16 md:mb-0">
+
+<div id="loading-view" class="app-view active text-center">
+<i class="fa-solid fa-circle-notch fa-spin text-5xl text-blue-600 mb-4"></i>
+<p class="text-base font-medium">Loading Velox Study...</p>
+</div>
+
+<!-- Authentication Page -->
+<div id="auth-view" class="app-view w-full max-w-md bg-white rounded-2xl shadow-xl p-8 border border-gray-200">
+<div id="error-box" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-xl mb-4 text-xs font-medium" role="alert">
+<span id="error-message"></span>
+</div>
+
+<div id="login-form-container">
+<h2 class="text-3xl font-black text-center mb-2">Welcome Back</h2>
+<p class="text-center text-sm text-gray-500 mb-6">Login to access your study portal</p>
+<form id="login-form" class="space-y-4">
+<div>
+<label class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">Email ID</label>
+<input type="email" id="login-email" required class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+</div>
+<div>
+<label class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">Password</label>
+<input type="password" id="login-password" required class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+</div>
+<button type="submit" id="login-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition shadow">
+Login
+</button>
+</form>
+<p class="mt-6 text-center text-sm text-gray-500">
+Don't have an account? <a href="#" onclick="toggleAuth('signup')" class="text-blue-600 font-bold hover:underline">Sign up</a>
+</p>
+</div>
+
+<div id="signup-form-container" class="hidden">
+<h2 class="text-3xl font-black text-center mb-2">Create Account</h2>
+<p class="text-center text-sm text-gray-500 mb-6">Start your preparation journey today</p>
+<form id="signup-form" class="space-y-4">
+<div>
+<label class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">Email ID</label>
+<input type="email" id="signup-email" required class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+</div>
+<div>
+<label class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">Password (Min 6 chars)</label>
+<input type="password" id="signup-password" required minlength="6" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+</div>
+<button type="submit" id="signup-btn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl transition shadow">
+Sign Up
+</button>
+</form>
+<p class="mt-6 text-center text-sm text-gray-500">
+Already have an account? <a href="#" onclick="toggleAuth('login')" class="text-blue-600 font-bold hover:underline">Login</a>
+</p>
+</div>
+</div>
+
+<!-- Stream Chooser Page -->
+<div id="stream-view" class="app-view w-full max-w-4xl">
+<div class="text-center mb-10">
+<h2 class="text-4xl font-black mb-2">Choose Your Target Exam</h2>
+<p class="text-base text-gray-500">Select your stream to initialize your dedicated study dashboard.</p>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<div onclick="selectStream('JEE')" class="stream-card cursor-pointer bg-white rounded-2xl shadow-md border-2 border-transparent hover:border-blue-500 p-8 text-center">
+<div class="w-20 h-20 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 text-3xl">
+<i class="fa-solid fa-calculator"></i>
+</div>
+<h3 class="text-2xl font-bold mb-1">JEE (Main + Adv)</h3>
+<p class="text-gray-400 text-xs font-medium">Engineering Entrance Exam</p>
+</div>
+
+<div onclick="selectStream('NEET')" class="stream-card cursor-pointer bg-white rounded-2xl shadow-md border-2 border-transparent hover:border-green-500 p-8 text-center">
+<div class="w-20 h-20 bg-green-50 text-green-600 rounded-2xl flex items-center justify-center mx-auto mb-4 text-3xl">
+<i class="fa-solid fa-stethoscope"></i>
+</div>
+<h3 class="text-2xl font-bold mb-1">NEET (UG)</h3>
+<p class="text-gray-400 text-xs font-medium">Medical Entrance Exam</p>
+</div>
+
+<div onclick="selectStream('NDA')" class="stream-card cursor-pointer bg-white rounded-2xl shadow-md border-2 border-transparent hover:border-yellow-500 p-8 text-center">
+<div class="w-20 h-20 bg-yellow-50 text-yellow-600 rounded-2xl flex items-center justify-center mx-auto mb-4 text-3xl">
+<i class="fa-solid fa-shield-halved"></i>
+</div>
+<h3 class="text-2xl font-bold mb-1">NDA</h3>
+<p class="text-gray-400 text-xs font-medium">Defence Services Exam</p>
+</div>
+</div>
+</div>
+
+<!-- DASHBOARD CONTAINER -->
+<div id="dashboard-view" class="app-view w-full max-w-7xl items-start">
+
+<!-- PAGE 0: DASHBOARD HOME VIEW -->
+<div id="dashboard-page" class="app-subview space-y-6">
+
+<div class="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-3xl p-6 md:p-8 text-white shadow-xl flex flex-col md:flex-row justify-between items-center gap-6">
+<div>
+<span id="dash-stream-title" class="bg-white/20 text-white font-bold text-xs px-3 py-1 rounded-full uppercase tracking-wider">JEE Target Aspirant</span>
+<h2 class="text-3xl md:text-4xl font-black mt-2">Welcome Back, Champion!</h2>
+<p class="text-blue-100 text-sm mt-1">Set your daily goals, dream goals & track your countdown.</p>
+<button onclick="changeStream()" class="mt-4 bg-white/20 hover:bg-white/30 text-white font-bold text-xs px-4 py-2 rounded-xl transition">
+<i class="fa-solid fa-rotate mr-1"></i> Change Stream
+</button>
+</div>
+<div class="flex items-center gap-4 bg-black/20 p-6 rounded-2xl border border-white/10 backdrop-blur-sm">
+<i class="fa-solid fa-fire streak-fire text-5xl text-orange-400"></i>
+<div>
+<p class="text-xs text-orange-200 uppercase font-bold tracking-wider">Study Streak</p>
+<p class="text-3xl font-black"><span id="dash-streak-count">0</span> Days</p>
+</div>
+</div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-200 flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between mb-2">
+<h3 class="font-bold text-xs flex items-center gap-1.5">
+<i class="fa-solid fa-calendar-days text-blue-600"></i> Countdown
+</h3>
+<input type="date" id="countdown-date-input" onchange="saveCountdownDate(this.value)" class="bg-gray-50 border border-gray-300 text-[10px] rounded-lg px-2 py-1 font-bold outline-none cursor-pointer">
+</div>
+<div class="bg-blue-50 border border-blue-100 rounded-xl p-4 text-center my-2">
+<p id="countdown-days-number" class="text-3xl font-black text-blue-700">--</p>
+<p class="text-[10px] text-blue-600 font-bold uppercase tracking-wider mt-0.5">Days Left</p>
+</div>
+</div>
+</div>
+
+<div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-200 flex flex-col justify-between">
+<div>
+<h3 class="font-bold text-xs flex items-center gap-1.5 mb-3">
+<i class="fa-solid fa-graduation-cap text-indigo-600"></i> Dream Goal
+</h3>
+<div class="space-y-2">
+<div>
+<label class="block text-[10px] font-bold text-gray-400 uppercase">Dream College</label>
+<input type="text" id="dream-college-input" oninput="saveDreamDetails()" placeholder="e.g. IIT Bombay" class="w-full bg-gray-50 border border-gray-300 text-xs rounded-lg px-3 py-2 outline-none font-semibold">
+</div>
+<div>
+<label class="block text-[10px] font-bold text-gray-400 uppercase">Dream AIR</label>
+<input type="text" id="dream-rank-input" oninput="saveDreamDetails()" placeholder="e.g. AIR 1" class="w-full bg-gray-50 border border-gray-300 text-xs rounded-lg px-3 py-2 outline-none font-semibold">
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 flex flex-col h-[300px]">
+<div class="flex items-center justify-between mb-3">
+<h3 class="font-bold text-sm flex items-center gap-2">
+<i class="fa-solid fa-bullseye text-green-600"></i> Today's Goals & Tracker
+</h3>
+<div class="flex items-center gap-2">
+<span id="todays-goal-progress-badge" class="text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-bold">0/0 done</span>
+<button onclick="resetTodaysGoals()" class="text-gray-400 hover:text-red-500 text-xs px-2 py-1 rounded transition" title="Reset Tracker"><i class="fa-solid fa-rotate-right"></i></button>
+</div>
+</div>
+
+<div class="flex gap-2 mb-3">
+<input type="text" id="new-goal-input" placeholder="Add a new goal..." class="flex-grow bg-gray-50 border border-gray-300 text-xs rounded-xl px-4 py-2.5 outline-none font-medium">
+<button onclick="addTodaysGoal()" class="bg-green-600 hover:bg-green-700 text-white font-bold px-4 py-2.5 rounded-xl transition text-xs shadow">
+<i class="fa-solid fa-plus"></i> Add
+</button>
+</div>
+
+<div id="todays-goals-container" class="flex-grow overflow-y-auto space-y-2 pr-1">
+<p class="text-center text-gray-400 text-xs py-8">No goals added for today yet.</p>
+</div>
+</div>
+
+</div>
+</div>
+
+<!-- PAGE 1: SYLLABUS & TRACKER VIEW -->
+<div id="syllabus-page" class="app-subview hidden space-y-6">
+<div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 md:p-8">
+<div class="flex flex-col lg:flex-row justify-between items-center gap-6">
+<div>
+<span class="bg-blue-50 text-blue-600 font-bold text-xs px-3 py-1 rounded-full uppercase tracking-wider">Syllabus Tracker</span>
+<h2 class="text-3xl font-black mt-2">Comprehensive Study Material</h2>
+</div>
+
+<div class="flex items-center gap-4 bg-blue-50 border border-blue-100 px-8 py-5 rounded-3xl shadow-sm">
+<div class="relative w-20 h-20 flex items-center justify-center">
+<svg class="w-full h-full" viewBox="0 0 36 36">
+<path class="text-blue-200" stroke-width="3.5" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+<path id="overall-circle-progress" class="text-blue-600 progress-ring__circle" stroke-dasharray="100, 100" stroke-dashoffset="100" stroke-width="3.5" stroke-linecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+</svg>
+<span id="overall-percentage" class="absolute text-sm font-black text-blue-700">0%</span>
+</div>
+<div>
+<p class="text-xs text-blue-600 font-bold uppercase tracking-wider">Overall Progress</p>
+<p id="progress-stats" class="text-base font-black mt-0.5">0 / 140 Tasks</p>
+</div>
+</div>
+</div>
+
+<div class="mt-6 pt-6 border-t border-gray-100 flex flex-col md:flex-row gap-4 items-center justify-between">
+<div class="flex flex-wrap gap-3 items-center w-full md:w-auto">
+<select id="class-filter-select" onchange="onClassFilterChange(this.value)" class="bg-gray-50 border border-gray-300 text-xs rounded-xl px-4 py-3 font-bold outline-none cursor-pointer">
+<option value="all">📚 All Classes (11 & 12)</option>
+<option value="11">📖 Class 11 Only</option>
+<option value="12">📘 Class 12 Only</option>
+</select>
+
+<select id="subject-filter-select" onchange="onSubjectFilterChange(this.value)" class="bg-gray-50 border border-gray-300 text-xs rounded-xl px-4 py-3 font-bold outline-none cursor-pointer">
+<option value="all">📖 All Subjects</option>
+</select>
+
+<div id="jee-mode-container" class="hidden">
+<select id="jee-mode-select" onchange="onJeeModeChange(this.value)" class="bg-blue-50 border border-blue-200 text-blue-800 text-xs rounded-xl px-4 py-3 font-bold outline-none cursor-pointer">
+<option value="mains">🎯 JEE Mains Mode</option>
+<option value="advanced">🚀 JEE Advanced Mode</option>
+</select>
+</div>
+</div>
+
+<div class="relative w-full md:w-72">
+<span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-gray-400"><i class="fa-solid fa-search"></i></span>
+<input type="text" id="chapter-search-input" oninput="onSearchInput(this.value)" placeholder="Search chapters..." class="w-full bg-gray-50 border border-gray-300 text-xs rounded-xl pl-10 pr-4 py-3 outline-none font-medium">
+</div>
+</div>
+</div>
+
+<div id="syllabus-container" class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6"></div>
+</div>
+
+<!-- PAGE 2: TEST VIEW -->
+<div id="test-page" class="app-subview hidden space-y-6">
+<div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 md:p-8">
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8 pb-6 border-b border-gray-100">
+<div>
+<span class="bg-red-50 text-red-600 font-bold text-xs px-3 py-1 rounded-full uppercase tracking-wider">Evaluation</span>
+<h3 class="text-3xl font-black mt-2">Test & Rank Analyzer</h3>
+<p class="text-gray-500 text-xs mt-1">Take mock exams to analyze your All India Rank and performance.</p>
+</div>
+<div class="bg-blue-50 border border-blue-200 px-5 py-3 rounded-2xl text-center">
+<p class="text-[10px] text-blue-600 font-bold uppercase">Best Score</p>
+<p id="best-test-score" class="text-xl font-black text-blue-800">0 / 300</p>
+</div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+<div class="lg:col-span-2 bg-gradient-to-br from-blue-600 to-indigo-800 text-white rounded-2xl p-6 md:p-8 shadow flex flex-col justify-between">
+<div>
+<div class="flex justify-between items-center mb-4">
+<span class="bg-white/20 text-white text-xs font-bold px-3 py-1 rounded-full">Active Test</span>
+<span class="text-xs text-blue-200"><i class="fa-regular fa-clock mr-1"></i> 3 Hours | 75 Qs</span>
+</div>
+<h4 class="text-2xl font-bold mb-2">Weekly Grand Mock Test</h4>
+<p class="text-blue-100 text-xs mb-6">Test covers recent curriculum chapters based on latest exam pattern.</p>
+</div>
+<div>
+<button onclick="startSundayTest()" class="bg-white text-blue-700 hover:bg-blue-50 font-bold px-6 py-3 rounded-xl transition text-xs flex items-center gap-2 shadow">
+<i class="fa-solid fa-play"></i> Attempt Test Now
+</button>
+</div>
+</div>
+
+<div class="bg-gray-50 rounded-2xl border border-gray-200 p-6 flex flex-col justify-between">
+<div>
+<h4 class="font-bold text-sm mb-4 flex items-center gap-2">
+<i class="fa-solid fa-trophy text-yellow-500"></i> Summary Stats
+</h4>
+<div class="space-y-3">
+<div class="flex justify-between items-center bg-white p-3 rounded-xl border border-gray-200 shadow-sm text-xs">
+<span class="text-gray-500 font-medium">Tests Taken</span>
+<span id="stat-tests-count" class="font-bold">0</span>
+</div>
+<div class="flex justify-between items-center bg-white p-3 rounded-xl border border-gray-200 shadow-sm text-xs">
+<span class="text-gray-500 font-medium">Average %</span>
+<span id="stat-avg-score" class="font-bold text-blue-600">0%</span>
+</div>
+<div class="flex justify-between items-center bg-white p-3 rounded-xl border border-gray-200 shadow-sm text-xs">
+<span class="text-gray-500 font-medium">Mock AIR</span>
+<span id="stat-rank" class="font-bold text-orange-600">--</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<div>
+<h4 class="font-bold text-sm mb-4">Past Test History</h4>
+<div class="overflow-x-auto border border-gray-200 rounded-xl">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-gray-50 text-gray-500 text-[10px] uppercase tracking-wider font-bold">
+<th class="p-4">Test Name</th>
+<th class="p-4">Date</th>
+<th class="p-4">Score</th>
+<th class="p-4">Accuracy</th>
+<th class="p-4">Status</th>
+</tr>
+</thead>
+<tbody id="test-history-table-body" class="divide-y divide-gray-200 text-xs">
+<tr><td colspan="5" class="p-6 text-center text-gray-400">No test attempts recorded yet.</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+
+<!-- PAGE 3: VELOBOOK SOCIAL VIEW -->
+<div id="velobook-page" class="app-subview hidden space-y-6">
+<div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 md:p-8">
+
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-6 pb-6 border-b border-gray-100">
+<div class="flex items-center gap-4">
+<div class="w-16 h-16 bg-gradient-to-tr from-purple-600 to-pink-500 text-white rounded-full flex items-center justify-center font-black text-2xl shadow-md" id="velobook-profile-initial">VB</div>
+<div>
+<div class="flex items-center gap-2">
+<h3 class="text-xl font-black" id="velobook-display-name">Aspirant</h3>
+<button onclick="openEditProfileModal()" class="text-xs bg-gray-100 hover:bg-gray-200 px-2.5 py-1 rounded-lg font-bold transition"><i class="fa-solid fa-pen mr-1"></i> Edit Name</button>
+</div>
+<p id="velobook-my-handle" class="text-xs text-blue-600 font-bold mt-0.5">@user</p>
+</div>
+</div>
+
+<div class="flex items-center gap-6 bg-gray-50 border border-gray-200 px-6 py-3 rounded-2xl">
+<div class="text-center">
+<p class="text-lg font-black" id="stat-followers-count">0</p>
+<p class="text-[10px] text-gray-400 font-bold uppercase">Followers</p>
+</div>
+<div class="h-8 w-px bg-gray-300"></div>
+<div class="text-center">
+<p class="text-lg font-black" id="stat-following-count">0</p>
+<p class="text-[10px] text-gray-400 font-bold uppercase">Following</p>
+</div>
+</div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+<div class="lg:col-span-2 bg-gray-50 rounded-2xl border border-gray-200 p-5 flex flex-col">
+<div class="flex justify-between items-center mb-4">
+<h4 class="font-bold text-sm flex items-center gap-2"><i class="fa-solid fa-photo-film text-purple-600"></i> Global Feed & Stories</h4>
+<button onclick="openCreatePostModal()" class="bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold px-3 py-2 rounded-xl transition shadow"><i class="fa-solid fa-plus mr-1"></i> Create Post / Story</button>
+</div>
+<div id="velobook-feed-container" class="space-y-4 max-h-[420px] overflow-y-auto pr-1">
+<p class="text-center text-gray-400 text-xs py-10">No posts or stories yet.</p>
+</div>
+</div>
+
+<div class="bg-gray-50 rounded-2xl border border-gray-200 p-5 flex flex-col">
+<h4 class="font-bold mb-3 text-xs flex items-center justify-between">
+<span><i class="fa-solid fa-user-group text-blue-600 mr-2"></i> Discover Peers</span>
+<span id="peer-count-badge" class="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-bold">0 users</span>
+</h4>
+<div class="mb-3">
+<input type="text" id="peer-search-input" oninput="filterPeers(this.value)" placeholder="Search any student..." class="w-full bg-white border border-gray-300 text-xs rounded-xl px-3 py-2.5 outline-none font-medium">
+</div>
+<div id="peers-list-container" class="flex-grow overflow-y-auto space-y-2.5 pr-1 max-h-[340px]"></div>
+</div>
+</div>
+
+<div class="bg-gray-50 rounded-2xl border border-gray-200 p-5 flex flex-col h-[450px]">
+<div id="chat-header" class="pb-3 border-b border-gray-200 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-9 h-9 bg-blue-600 text-white rounded-xl flex items-center justify-center font-bold text-xs" id="active-chat-avatar">VB</div>
+<div>
+<h4 class="font-bold text-xs" id="active-chat-name">Select a peer to chat</h4>
+<p class="text-[10px] text-gray-400" id="active-chat-status">Choose someone from above or peers list</p>
+</div>
+</div>
+</div>
+
+<div id="chat-messages-container" class="flex-grow overflow-y-auto p-4 space-y-3 bg-white rounded-xl border border-gray-200 my-3 flex flex-col justify-center items-center text-center text-gray-400">
+<i class="fa-regular fa-comments text-3xl mb-2 text-gray-300"></i>
+<p class="text-xs">Click on any peer to start chatting!</p>
+</div>
+
+<form id="chat-form" onsubmit="sendChatMessage(event)" class="flex gap-2 hidden">
+<input type="text" id="chat-input-msg" placeholder="Type your message..." autocomplete="off" class="flex-grow bg-white border border-gray-300 rounded-xl px-4 py-2.5 text-xs outline-none font-medium">
+<button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-2.5 rounded-xl transition text-xs">
+<i class="fa-solid fa-paper-plane"></i>
+</button>
+</form>
+</div>
+</div>
+</div>
+
+</div>
+</main>
+
+<!-- Test Modal -->
+<div id="test-modal" class="fixed inset-0 bg-black/60 hidden z-50 flex items-center justify-center p-4">
+<div class="bg-white rounded-2xl max-w-md w-full p-6 md:p-8 shadow-2xl">
+<h3 class="text-2xl font-black mb-2">Simulate Test Score</h3>
+<p class="text-xs text-gray-500 mb-6">Enter your test marks (out of 300) below:</p>
+<div class="mb-6">
+<label class="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wider">Marks Obtained</label>
+<input type="number" id="simulated-score-input" min="0" max="300" value="210" class="w-full px-4 py-3 border border-gray-300 rounded-xl text-base font-bold outline-none">
+</div>
+<div class="flex gap-3">
+<button onclick="submitSimulatedTest()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition text-xs shadow">Submit</button>
+<button onclick="closeTestModal()" class="px-5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-3 rounded-xl transition text-xs">Cancel</button>
+</div>
+</div>
+</div>
+
+<!-- Edit Profile Modal -->
+<div id="edit-profile-modal" class="fixed inset-0 bg-black/60 hidden z-50 flex items-center justify-center p-4">
+<div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl">
+<h3 class="text-lg font-black mb-4">Edit Your Velobook Profile</h3>
+<div class="mb-4">
+<label class="block text-xs font-bold text-gray-500 mb-1 uppercase">Your Display Name</label>
+<input type="text" id="edit-name-input" class="w-full bg-gray-50 border border-gray-300 text-xs rounded-xl px-3 py-2.5 outline-none font-semibold">
+</div>
+<div class="flex gap-2">
+<button onclick="saveProfileName()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-xl text-xs">Save</button>
+<button onclick="document.getElementById('edit-profile-modal').classList.add('hidden')" class="px-4 bg-gray-100 text-gray-700 font-bold py-2.5 rounded-xl text-xs">Cancel</button>
+</div>
+</div>
+</div>
+
+<!-- Create Post / Story Modal -->
+<div id="create-post-modal" class="fixed inset-0 bg-black/60 hidden z-50 flex items-center justify-center p-4">
+<div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl">
+<h3 class="text-lg font-black mb-4">Share Study Post / Story</h3>
+<div class="space-y-3 mb-4">
+<div>
+<label class="block text-xs font-bold text-gray-500 mb-1 uppercase">Post Type</label>
+<select id="post-type-select" class="w-full bg-gray-50 border border-gray-300 text-xs rounded-xl px-3 py-2.5 outline-none font-semibold">
+<option value="post">📸 Post</option>
+<option value="story">🔥 Story (24h)</option>
+</select>
+</div>
+<div>
+<label class="block text-xs font-bold text-gray-500 mb-1 uppercase">Caption / Update</label>
+<textarea id="post-caption-input" rows="3" placeholder="What are you studying today?" class="w-full bg-gray-50 border border-gray-300 text-xs rounded-xl px-3 py-2.5 outline-none font-medium"></textarea>
+</div>
+</div>
+<div class="flex gap-2">
+<button onclick="submitNewPost()" class="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-bold py-2.5 rounded-xl text-xs shadow">Publish</button>
+<button onclick="document.getElementById('create-post-modal').classList.add('hidden')" class="px-4 bg-gray-100 text-gray-700 font-bold py-2.5 rounded-xl text-xs">Cancel</button>
+</div>
+</div>
+</div>
+
+<!-- Notes / Resources Modal per Chapter -->
+<div id="notes-modal" class="fixed inset-0 bg-black/60 hidden z-50 flex items-center justify-center p-4">
+<div class="bg-white rounded-2xl max-w-lg w-full p-6 md:p-8 shadow-2xl">
+<div class="flex justify-between items-center mb-4 pb-3 border-b border-gray-100">
+<h3 class="text-lg font-black" id="notes-chapter-title">Chapter Notes & Resources</h3>
+<button onclick="document.getElementById('notes-modal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600 font-bold"><i class="fa-solid fa-xmark text-lg"></i></button>
+</div>
+
+<div class="space-y-3 bg-gray-50 p-4 rounded-xl border border-gray-200 mb-4">
+<p class="text-xs font-bold text-gray-700"><i class="fa-solid fa-cloud-arrow-up mr-1 text-blue-600"></i> Add Note, PDF Link, or Photo</p>
+<div class="grid grid-cols-2 gap-2">
+<input type="text" id="note-title-input" placeholder="Title (e.g. Formula Sheet)" class="bg-white border border-gray-300 text-xs rounded-lg px-3 py-2 outline-none">
+<input type="text" id="note-link-input" placeholder="URL (PDF / Link / Photo)" class="bg-white border border-gray-300 text-xs rounded-lg px-3 py-2 outline-none">
+</div>
+<button onclick="saveChapterNote()" class="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2.5 rounded-xl transition">Save Resource</button>
+</div>
+
+<div id="chapter-notes-list" class="space-y-2 max-h-[220px] overflow-y-auto pr-1">
+<p class="text-center text-gray-400 text-xs py-4">No notes added for this chapter yet.</p>
+</div>
+</div>
+</div>
+
+<!-- JavaScript & Firebase Logic -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDoc, collection, getDocs, onSnapshot, addDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+const firebaseConfig = {
+apiKey: "AIzaSyD3POgzvdAVP2BjXSh_34UTfwG3lRBbH9A",
+authDomain: "velox-study-vs.firebaseapp.com",
+projectId: "velox-study-vs",
+storageBucket: "velox-study-vs.firebasestorage.app",
+messagingSenderId: "41962570957",
+appId: "1:41962570957:web:34f6303a3fa73f17df9584"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+let currentUser = null;
+let userData = {
+stream: null, progress: {}, streak: 0, lastLoginDate: '',
+testHistory: [], following: [], followers: [], targetDate: '',
+todaysGoals: [], dreamCollege: '', dreamRank: '', displayName: '', posts: [], chapterNotes: {}
+};
+
+let currentClassFilter = 'all';
+let currentSubjectFilter = 'all';
+let currentJeeMode = 'mains';
+let searchQuery = '';
+let allPeers = [];
+let activeChatPeer = null;
+let chatUnsubscribe = null;
+let activeNoteChapterId = null;
+
+const SYLLABUS = {
+'JEE': {
+'Physics': [
+{ name: 'Physical World & Measurement', class: 11, weightageMains: '2%', weightageAdv: '1%', targets: { theory: 2, qns: 100, pyqs: 30, rev: 3 } },
+{ name: 'Kinematics', class: 11, weightageMains: '3%', weightageAdv: '2%', targets: { theory: 3, qns: 150, pyqs: 40, rev: 4 } },
+{ name: 'Laws of Motion', class: 11, weightageMains: '3%', weightageAdv: '3%', targets: { theory: 3, qns: 150, pyqs: 45, rev: 4 } },
+{ name: 'Work, Energy & Power', class: 11, weightageMains: '4%', weightageAdv: '4%', targets: { theory: 3, qns: 150, pyqs: 50, rev: 4 } },
+{ name: 'Rotational Motion', class: 11, weightageMains: '5%', weightageAdv: '7%', targets: { theory: 4, qns: 200, pyqs: 60, rev: 5 } },
+{ name: 'Gravitation', class: 11, weightageMains: '3%', weightageAdv: '2%', targets: { theory: 2, qns: 120, pyqs: 35, rev: 3 } },
+{ name: 'Thermodynamics', class: 11, weightageMains: '6%', weightageAdv: '6%', targets: { theory: 4, qns: 180, pyqs: 55, rev: 4 } },
+{ name: 'Electrostatics', class: 12, weightageMains: '7%', weightageAdv: '8%', targets: { theory: 4, qns: 250, pyqs: 70, rev: 5 } },
+{ name: 'Current Electricity', class: 12, weightageMains: '6%', weightageAdv: '7%', targets: { theory: 3, qns: 200, pyqs: 60, rev: 4 } },
+{ name: 'Magnetic Effects & Magnetism', class: 12, weightageMains: '5%', weightageAdv: '6%', targets: { theory: 3, qns: 180, pyqs: 50, rev: 4 } },
+{ name: 'EMI & AC', class: 12, weightageMains: '5%', weightageAdv: '4%', targets: { theory: 3, qns: 150, pyqs: 45, rev: 4 } },
+{ name: 'Optics (Ray & Wave)', class: 12, weightageMains: '8%', weightageAdv: '9%', targets: { theory: 5, qns: 250, pyqs: 80, rev: 6 } },
+{ name: 'Modern Physics', class: 12, weightageMains: '10%', weightageAdv: '9%', targets: { theory: 4, qns: 220, pyqs: 75, rev: 5 } }
+],
+'Chemistry': [
+{ name: 'Mole Concept', class: 11, weightageMains: '3%', weightageAdv: '2%', targets: { theory: 2, qns: 120, pyqs: 35, rev: 3 } },
+{ name: 'Structure of Atom', class: 11, weightageMains: '4%', weightageAdv: '4%', targets: { theory: 3, qns: 140, pyqs: 40, rev: 4 } },
+{ name: 'Chemical Bonding', class: 11, weightageMains: '6%', weightageAdv: '7%', targets: { theory: 4, qns: 200, pyqs: 60, rev: 5 } },
+{ name: 'Thermodynamics', class: 11, weightageMains: '5%', weightageAdv: '6%', targets: { theory: 3, qns: 160, pyqs: 50, rev: 4 } },
+{ name: 'Equilibrium (Chem + Ionic)', class: 11, weightageMains: '7%', weightageAdv: '8%', targets: { theory: 5, qns: 250, pyqs: 70, rev: 6 } },
+{ name: 'Solutions', class: 12, weightageMains: '5%', weightageAdv: '4%', targets: { theory: 2, qns: 130, pyqs: 40, rev: 3 } },
+{ name: 'Electrochemistry', class: 12, weightageMains: '4%', weightageAdv: '5%', targets: { theory: 3, qns: 150, pyqs: 45, rev: 4 } },
+{ name: 'Chemical Kinetics', class: 12, weightageMains: '4%', weightageAdv: '5%', targets: { theory: 3, qns: 140, pyqs: 40, rev: 4 } },
+{ name: 'Coordination Compounds', class: 12, weightageMains: '6%', weightageAdv: '8%', targets: { theory: 4, qns: 180, pyqs: 55, rev: 5 } },
+{ name: 'GOC & Isomerism', class: 11, weightageMains: '8%', weightageAdv: '10%', targets: { theory: 5, qns: 300, pyqs: 90, rev: 6 } },
+{ name: 'Aldehydes & Ketones', class: 12, weightageMains: '7%', weightageAdv: '8%', targets: { theory: 4, qns: 200, pyqs: 65, rev: 5 } },
+{ name: 'Biomolecules', class: 12, weightageMains: '3%', weightageAdv: '2%', targets: { theory: 2, qns: 100, pyqs: 30, rev: 3 } }
+],
+'Mathematics': [
+{ name: 'Sets, Relations & Functions', class: 11, weightageMains: '5%', weightageAdv: '4%', targets: { theory: 3, qns: 150, pyqs: 45, rev: 4 } },
+{ name: 'Quadratic Equations', class: 11, weightageMains: '4%', weightageAdv: '3%', targets: { theory: 3, qns: 140, pyqs: 40, rev: 4 } },
+{ name: 'Complex Numbers', class: 11, weightageMains: '3%', weightageAdv: '6%', targets: { theory: 4, qns: 180, pyqs: 55, rev: 5 } },
+{ name: 'Permutations & Combinations', class: 11, weightageMains: '4%', weightageAdv: '5%', targets: { theory: 4, qns: 190, pyqs: 55, rev: 5 } },
+{ name: 'Binomial Theorem', class: 11, weightageMains: '4%', weightageAdv: '3%', targets: { theory: 3, qns: 150, pyqs: 45, rev: 4 } },
+{ name: 'Coordinate Geometry', class: 11, weightageMains: '12%', weightageAdv: '10%', targets: { theory: 6, qns: 350, pyqs: 100, rev: 7 } },
+{ name: 'Calculus', class: 12, weightageMains: '25%', weightageAdv: '30%', targets: { theory: 8, qns: 500, pyqs: 150, rev: 8 } },
+{ name: 'Matrices & Determinants', class: 12, weightageMains: '7%', weightageAdv: '6%', targets: { theory: 3, qns: 180, pyqs: 55, rev: 4 } },
+{ name: 'Vector & 3D Geometry', class: 12, weightageMains: '10%', weightageAdv: '12%', targets: { theory: 5, qns: 250, pyqs: 80, rev: 6 } },
+{ name: 'Probability', class: 12, weightageMains: '6%', weightageAdv: '8%', targets: { theory: 4, qns: 200, pyqs: 60, rev: 5 } }
+]
+},
+'NEET': {
+'Physics': [
+{ name: 'Units & Measurements', class: 11, weightageMains: '3%', weightageAdv: '3%', targets: { theory: 2, qns: 100, pyqs: 30, rev: 3 } },
+{ name: 'Kinematics', class: 11, weightageMains: '4%', weightageAdv: '4%', targets: { theory: 3, qns: 150, pyqs: 40, rev: 4 } },
+{ name: 'Laws of Motion', class: 11, weightageMains: '4%', weightageAdv: '4%', targets: { theory: 3, qns: 150, pyqs: 45, rev: 4 } },
+{ name: 'Thermodynamics', class: 11, weightageMains: '6%', weightageAdv: '6%', targets: { theory: 4, qns: 180, pyqs: 50, rev: 4 } },
+{ name: 'Electrostatics', class: 12, weightageMains: '7%', weightageAdv: '7%', targets: { theory: 4, qns: 200, pyqs: 60, rev: 5 } },
+{ name: 'Current Electricity', class: 12, weightageMains: '8%', weightageAdv: '8%', targets: { theory: 3, qns: 180, pyqs: 55, rev: 4 } },
+{ name: 'Optics', class: 12, weightageMains: '10%', weightageAdv: '10%', targets: { theory: 5, qns: 220, pyqs: 70, rev: 5 } },
+{ name: 'Modern Physics', class: 12, weightageMains: '12%', weightageAdv: '12%', targets: { theory: 4, qns: 200, pyqs: 65, rev: 5 } }
+],
+'Chemistry': [
+{ name: 'Basic Concepts', class: 11, weightageMains: '2%', weightageAdv: '2%', targets: { theory: 2, qns: 100, pyqs: 30, rev: 3 } },
+{ name: 'Chemical Bonding', class: 11, weightageMains: '9%', weightageAdv: '9%', targets: { theory: 4, qns: 200, pyqs: 60, rev: 5 } },
+{ name: 'Equilibrium', class: 11, weightageMains: '7%', weightageAdv: '7%', targets: { theory: 4, qns: 180, pyqs: 55, rev: 4 } },
+{ name: 'Coordination Compounds', class: 12, weightageMains: '9%', weightageAdv: '9%', targets: { theory: 3, qns: 160, pyqs: 50, rev: 4 } },
+{ name: 'Hydrocarbons', class: 11, weightageMains: '8%', weightageAdv: '8%', targets: { theory: 4, qns: 190, pyqs: 60, rev: 5 } },
+{ name: 'Aldehydes, Ketones', class: 12, weightageMains: '8%', weightageAdv: '8%', targets: { theory: 3, qns: 170, pyqs: 50, rev: 4 } }
+],
+'Biology': [
+{ name: 'Diversity in Living World', class: 11, weightageMains: '14%', weightageAdv: '14%', targets: { theory: 4, qns: 250, pyqs: 80, rev: 5 } },
+{ name: 'Structural Organisation', class: 11, weightageMains: '5%', weightageAdv: '5%', targets: { theory: 2, qns: 120, pyqs: 35, rev: 3 } },
+{ name: 'Cell Structure & Function', class: 11, weightageMains: '9%', weightageAdv: '9%', targets: { theory: 3, qns: 180, pyqs: 55, rev: 4 } },
+{ name: 'Plant Physiology', class: 11, weightageMains: '6%', weightageAdv: '6%', targets: { theory: 3, qns: 160, pyqs: 50, rev: 4 } },
+{ name: 'Human Physiology', class: 11, weightageMains: '20%', weightageAdv: '20%', targets: { theory: 6, qns: 350, pyqs: 110, rev: 7 } },
+{ name: 'Reproduction', class: 12, weightageMains: '9%', weightageAdv: '9%', targets: { theory: 3, qns: 170, pyqs: 55, rev: 4 } },
+{ name: 'Genetics & Evolution', class: 12, weightageMains: '18%', weightageAdv: '18%', targets: { theory: 5, qns: 300, pyqs: 100, rev: 6 } },
+{ name: 'Ecology & Environment', class: 12, weightageMains: '12%', weightageAdv: '12%', targets: { theory: 4, qns: 200, pyqs: 70, rev: 5 } }
+]
+},
+'NDA': {
+'Mathematics': [
+{ name: 'Algebra', class: 11, weightageMains: 'High', weightageAdv: 'High', targets: { theory: 4, qns: 200, pyqs: 60, rev: 5 } },
+{ name: 'Trigonometry', class: 11, weightageMains: 'High', weightageAdv: 'High', targets: { theory: 3, qns: 150, pyqs: 45, rev: 4 } },
+{ name: 'Differential Calculus', class: 12, weightageMains: 'Med', weightageAdv: 'Med', targets: { theory: 4, qns: 180, pyqs: 50, rev: 4 } },
+{ name: 'Integral Calculus', class: 12, weightageMains: 'Med', weightageAdv: 'Med', targets: { theory: 4, qns: 180, pyqs: 50, rev: 4 } },
+{ name: 'Vector & 3D', class: 12, weightageMains: 'Low', weightageAdv: 'Low', targets: { theory: 3, qns: 130, pyqs: 40, rev: 3 } },
+{ name: 'Statistics & Prob', class: 11, weightageMains: 'Med', weightageAdv: 'Med', targets: { theory: 3, qns: 140, pyqs: 40, rev: 4 } }
+],
+'GAT': [
+{ name: 'English Grammar', class: 11, weightageMains: 'Very High', weightageAdv: 'Very High', targets: { theory: 3, qns: 200, pyqs: 70, rev: 5 } },
+{ name: 'Physics (General)', class: 11, weightageMains: 'Med', weightageAdv: 'Med', targets: { theory: 2, qns: 120, pyqs: 40, rev: 3 } },
+{ name: 'Chemistry (General)', class: 11, weightageMains: 'Low', weightageAdv: 'Low', targets: { theory: 2, qns: 100, pyqs: 30, rev: 3 } },
+{ name: 'History & Geography', class: 11, weightageMains: 'High', weightageAdv: 'High', targets: { theory: 4, qns: 180, pyqs: 60, rev: 4 } }
+]
+}
+};
+
+const CHECKLIST_ITEMS = [
+{ id: 'theory', label: 'Theory', color: 'text-blue-600' },
+{ id: 'questions', label: 'Questions', color: 'text-purple-600' },
+{ id: 'pyqs', label: 'PYQs', color: 'text-orange-600' },
+{ id: 'revision', label: 'Revision', color: 'text-green-600' }
+];
+
+function switchView(viewId) {
+document.querySelectorAll('.app-view').forEach(el => el.classList.remove('active'));
+document.getElementById(viewId).classList.add('active');
+hideError();
+}
+
+window.switchAppView = (pageId) => {
+document.querySelectorAll('.app-subview').forEach(v => v.classList.add('hidden'));
+document.getElementById(pageId).classList.remove('hidden');
+
+['dashboard-page', 'syllabus-page', 'test-page', 'velobook-page'].forEach(p => {
+const mapKey = p.replace('-page', '');
+const deskBtn = document.getElementById(`nav-btn-${mapKey}`);
+const mobBtn = document.getElementById(`mob-btn-${mapKey}`);
+
+if(deskBtn) {
+deskBtn.className = p === pageId ? 'px-3 py-1.5 text-xs font-bold rounded-lg bg-white text-blue-700 shadow transition' : 'px-3 py-1.5 text-xs font-bold rounded-lg text-white hover:bg-blue-600 transition';
+}
+if(mobBtn) {
+mobBtn.className = p === pageId ? 'flex flex-col items-center text-blue-600 text-[10px] font-bold py-1 px-2' : 'flex flex-col items-center text-gray-400 text-[10px] font-bold py-1 px-2';
+}
+});
+
+if(pageId === 'dashboard-page') updateDashboardHome();
+if(pageId === 'test-page') renderTestHistory();
+if(pageId === 'velobook-page') startLivePeersListener();
+};
+
+window.toggleAuth = (type) => {
+hideError();
+if(type === 'signup') {
+document.getElementById('login-form-container').classList.add('hidden');
+document.getElementById('signup-form-container').classList.remove('hidden');
+} else {
+document.getElementById('signup-form-container').classList.add('hidden');
+document.getElementById('login-form-container').classList.remove('hidden');
+}
+};
+
+function showError(msg) {
+document.getElementById('error-message').innerText = msg;
+document.getElementById('error-box').classList.remove('hidden');
+}
+
+function hideError() {
+document.getElementById('error-box').classList.add('hidden');
+}
+
+async function calculateAndUpdateStreak(userDocRef, currentData) {
+const todayDateObj = new Date();
+const todayStr = todayDateObj.getFullYear() + '-' + String(todayDateObj.getMonth()+1).padStart(2, '0') + '-' + String(todayDateObj.getDate()).padStart(2, '0');
+
+let streak = currentData.streak || 0;
+let lastLogin = currentData.lastLoginDate || '';
+let updated = false;
+
+if (lastLogin !== todayStr) {
+if (lastLogin) {
+const t = new Date(todayStr);
+const l = new Date(lastLogin);
+const diffTime = Math.abs(t - l);
+const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+if (diffDays === 1) streak += 1;
+else if (diffDays > 1) streak = 1;
+} else {
+streak = 1;
+}
+lastLogin = todayStr;
+updated = true;
+}
+
+document.getElementById('nav-streak-count').innerText = streak;
+document.getElementById('dash-streak-count').innerText = streak;
+
+if (updated) {
+currentData.streak = streak;
+currentData.lastLoginDate = lastLogin;
+await setDoc(userDocRef, { streak: streak, lastLoginDate: lastLogin }, { merge: true });
+}
+return currentData;
+}
+
+onAuthStateChanged(auth, async (user) => {
+if (user) {
+currentUser = user;
+document.getElementById('nav-user-info').classList.remove('hidden');
+document.getElementById('mobile-bottom-nav').classList.remove('hidden');
+
+switchView('loading-view');
+
+try {
+const userDocRef = doc(db, 'users', user.uid);
+const userDocSnap = await getDoc(userDocRef);
+
+if (userDocSnap.exists()) {
+userData = userDocSnap.data();
+if(!userData.progress) userData.progress = {};
+if(!userData.testHistory) userData.testHistory = [];
+if(!userData.following) userData.following = [];
+if(!userData.followers) userData.followers = [];
+if(!userData.todaysGoals) userData.todaysGoals = [];
+if(!userData.targetDate) userData.targetDate = '';
+if(!userData.dreamCollege) userData.dreamCollege = '';
+if(!userData.dreamRank) userData.dreamRank = '';
+if(!userData.displayName) userData.displayName = user.email.split('@')[0];
+if(!userData.posts) userData.posts = [];
+if(!userData.chapterNotes) userData.chapterNotes = {};
+if(!userData.theme) userData.theme = 'light';
+
+setTheme(userData.theme);
+document.getElementById('theme-selector').value = userData.theme;
+userData = await calculateAndUpdateStreak(userDocRef, userData);
+updateVelobookProfileUI();
+
+if (userData.stream) {
+if(userData.stream === 'JEE') {
+document.getElementById('jee-mode-container').classList.remove('hidden');
+} else {
+document.getElementById('jee-mode-container').classList.add('hidden');
+}
+updateSubjectDropdown(userData.stream);
+renderDashboard();
+switchView('dashboard-view');
+switchAppView('dashboard-page');
+} else {
+switchView('stream-view');
+}
+} else {
+userData = {
+stream: null, progress: {}, streak: 1,
+lastLoginDate: new Date().toISOString().split('T')[0],
+testHistory: [], following: [], followers: [],
+todaysGoals: [], targetDate: '', dreamCollege: '', dreamRank: '',
+displayName: user.email.split('@')[0], posts: [], chapterNotes: {}, theme: 'light',
+email: user.email, uid: user.uid
+};
+await setDoc(userDocRef, userData);
+document.getElementById('nav-streak-count').innerText = userData.streak;
+updateVelobookProfileUI();
+switchView('stream-view');
+}
+} catch (error) {
+console.error("Database error:", error);
+showError("Error connecting to database.");
+switchView('auth-view');
+}
+} else {
+currentUser = null;
+document.getElementById('nav-user-info').classList.add('hidden');
+document.getElementById('mobile-bottom-nav').classList.add('hidden');
+switchView('auth-view');
+}
+});
+
+window.setTheme = async (themeName) => {
+document.body.className = `theme-${themeName} min-h-screen font-sans flex flex-col transition-colors duration-300`;
+userData.theme = themeName;
+if(currentUser) {
+try { await setDoc(doc(db, 'users', currentUser.uid), { theme: themeName }, { merge: true }); } catch(e){console.error(e);}
+}
+};
+
+document.getElementById('signup-form').addEventListener('submit', async (e) => {
+e.preventDefault();
+const email = document.getElementById('signup-email').value;
+const password = document.getElementById('signup-password').value;
+const btn = document.getElementById('signup-btn');
+btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Creating...';
+btn.disabled = true;
+
+try {
+const cred = await createUserWithEmailAndPassword(auth, email, password);
+await setDoc(doc(db, 'users', cred.user.uid), {
+email: email, uid: cred.user.uid, stream: null, following: [], followers: [], todaysGoals: [], targetDate: '', displayName: email.split('@')[0], posts: [], chapterNotes: {}, theme: 'light'
+});
+} catch (error) {
+showError(error.message.replace('Firebase: ', ''));
+btn.innerHTML = 'Sign Up';
+btn.disabled = false;
+}
+});
+
+document.getElementById('login-form').addEventListener('submit', async (e) => {
+e.preventDefault();
+const email = document.getElementById('login-email').value;
+const password = document.getElementById('login-password').value;
+const btn = document.getElementById('login-btn');
+btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Logging in...';
+btn.disabled = true;
+
+try { await signInWithEmailAndPassword(auth, email, password); }
+catch (error) {
+showError("Invalid email or password.");
+btn.innerHTML = 'Login';
+btn.disabled = false;
+}
+});
+
+window.logout = async () => {
+switchView('loading-view');
+await signOut(auth);
+};
+
+window.selectStream = async (streamName) => {
+if (!currentUser) return;
+switchView('loading-view');
+
+try {
+const userDocRef = doc(db, 'users', currentUser.uid);
+userData.stream = streamName;
+userData.email = currentUser.email;
+userData.uid = currentUser.uid;
+await setDoc(userDocRef, { stream: streamName, email: currentUser.email, uid: currentUser.uid }, { merge: true });
+
+if(streamName === 'JEE') {
+document.getElementById('jee-mode-container').classList.remove('hidden');
+} else {
+document.getElementById('jee-mode-container').classList.add('hidden');
+}
+
+updateSubjectDropdown(streamName);
+renderDashboard();
+switchView('dashboard-view');
+switchAppView('dashboard-page');
+} catch (error) {
+console.error("Failed to save stream:", error);
+alert("Network error. Try again.");
+switchView('stream-view');
+}
+};
+
+window.changeStream = () => { switchView('stream-view'); };
+
+function updateSubjectDropdown(streamName) {
+const subSelect = document.getElementById('subject-filter-select');
+subSelect.innerHTML = '<option value="all">📖 All Subjects</option>';
+const subjects = Object.keys(SYLLABUS[streamName]);
+subjects.forEach(sub => {
+const opt = document.createElement('option');
+opt.value = sub;
+opt.innerText = sub;
+subSelect.appendChild(opt);
+});
+currentSubjectFilter = 'all';
+}
+
+window.onClassFilterChange = (val) => { currentClassFilter = val; renderDashboard(); };
+window.onSubjectFilterChange = (val) => { currentSubjectFilter = val; renderDashboard(); };
+window.onJeeModeChange = (val) => { currentJeeMode = val; renderDashboard(); };
+window.onSearchInput = (val) => { searchQuery = val.toLowerCase().trim(); renderDashboard(); };
+
+function renderDashboard() {
+const stream = userData.stream;
+document.getElementById('dash-stream-title').innerText = `${stream} Target Aspirant`;
+const syllabusData = SYLLABUS[stream];
+
+let totalTasksAll = 0;
+let completedTasksAll = 0;
+
+const container = document.getElementById('syllabus-container');
+container.innerHTML = '';
+
+for (const [subject, allChapters] of Object.entries(syllabusData)) {
+if(currentSubjectFilter !== 'all' && currentSubjectFilter !== subject) continue;
+
+let visibleChapters = allChapters.filter(c => {
+const matchClass = (currentClassFilter === 'all' || c.class == currentClassFilter);
+const matchSearch = c.name.toLowerCase().includes(searchQuery);
+return matchClass && matchSearch;
+});
+
+let subjectTotalTasks = 0;
+let subjectCompletedTasks = 0;
+
+allChapters.forEach(chapter => {
+const safeName = chapter.name.replace(/[^a-zA-Z0-9]/g, '');
+CHECKLIST_ITEMS.forEach(item => {
+totalTasksAll++;
+subjectTotalTasks++;
+const taskId = `${stream}_${subject}_${safeName}_${item.id}`;
+if (userData.progress && userData.progress[taskId] > 0) {
+completedTasksAll++;
+subjectCompletedTasks++;
+}
+});
+});
+
+if(visibleChapters.length === 0 && searchQuery !== '') continue;
+
+const subjectCard = document.createElement('div');
+subjectCard.className = 'bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden flex flex-col';
+
+let iconClass = 'fa-book'; let iconColor = 'text-gray-500'; let bgColor = 'bg-gray-50';
+if(subject.includes('Physics')) { iconClass = 'fa-magnet'; iconColor = 'text-blue-600'; bgColor='bg-blue-50'; }
+if(subject.includes('Chemistry')) { iconClass = 'fa-flask'; iconColor = 'text-purple-600'; bgColor='bg-purple-50'; }
+if(subject.includes('Math')) { iconClass = 'fa-square-root-variable'; iconColor = 'text-red-600'; bgColor='bg-red-50'; }
+if(subject.includes('Bio')) { iconClass = 'fa-dna'; iconColor = 'text-green-600'; bgColor='bg-green-50'; }
+
+const subPct = subjectTotalTasks === 0 ? 0 : Math.round((subjectCompletedTasks / subjectTotalTasks) * 100);
+const subCircumference = 2 * Math.PI * 15.9155;
+const subDashOffset = subCircumference - (subPct / 100) * subCircumference;
+
+const subjectHeader = document.createElement('div');
+subjectHeader.className = `${bgColor} border-b border-gray-200 px-6 py-4 flex justify-between items-center`;
+subjectHeader.innerHTML = `
+<h4 class="text-sm font-bold flex items-center gap-2">
+<i class="fa-solid ${iconClass} ${iconColor}"></i> ${subject}
+</h4>
+<div class="flex items-center gap-2 bg-white px-3 py-1 rounded-full shadow-sm border border-black/5">
+<div class="relative w-7 h-7 flex items-center justify-center">
+<svg class="w-full h-full" viewBox="0 0 36 36">
+<path class="text-gray-200" stroke-width="4" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+<path class="text-blue-600 progress-ring__circle" stroke-dasharray="${subCircumference}" stroke-dashoffset="${subDashOffset}" stroke-width="4" stroke-linecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+</svg>
+<span class="absolute text-[8px] font-bold">${subPct}%</span>
+</div>
+<span class="text-[10px] font-semibold">${subjectCompletedTasks}/${subjectTotalTasks}</span>
+</div>
+`;
+subjectCard.appendChild(subjectHeader);
+
+const chapterList = document.createElement('div');
+chapterList.className = 'flex flex-col flex-grow';
+
+visibleChapters.forEach((chapter, index) => {
+const chapterContainer = document.createElement('div');
+chapterContainer.className = 'p-4 border-b border-gray-100 last:border-b-0 transition-colors relative';
+
+const classBadge = chapter.class ? `<span class="absolute top-4 right-20 text-[9px] bg-gray-100 text-gray-600 font-bold px-2 py-0.5 rounded border border-gray-200">Class ${chapter.class}</span>` : '';
+let weightVal = stream === 'JEE' ? (currentJeeMode === 'advanced' ? chapter.weightageAdv : chapter.weightageMains) : chapter.weightageMains;
+const safeName = chapter.name.replace(/[^a-zA-Z0-9]/g, '');
+const notesCount = (userData.chapterNotes && userData.chapterNotes[safeName]) ? userData.chapterNotes[safeName].length : 0;
+
+const chapterTitle = document.createElement('div');
+chapterTitle.className = 'mb-3 pr-28 flex items-center justify-between';
+chapterTitle.innerHTML = `
+<div>
+<h5 class="font-bold text-xs inline-block mr-2">${chapter.name}</h5>
+${weightVal ? `<span class="inline-block text-[9px] bg-blue-50 text-blue-700 border-blue-200 font-bold px-2 py-0.5 rounded border mt-1"><i class="fa-solid fa-star text-[7px] mr-1"></i>${weightVal}</span>` : ''}
+</div>
+<button onclick="openChapterNotesModal('${safeName}', '${chapter.name}')" class="text-[10px] bg-purple-50 text-purple-600 hover:bg-purple-100 font-bold px-2.5 py-1 rounded-lg transition border border-purple-200"><i class="fa-solid fa-note-sticky mr-1"></i> Notes ${notesCount > 0 ? '('+notesCount+')' : ''}</button>
+${classBadge}
+`;
+chapterContainer.appendChild(chapterTitle);
+
+const checkGrid = document.createElement('div');
+checkGrid.className = 'grid grid-cols-1 md:grid-cols-2 gap-3 mt-2';
+
+CHECKLIST_ITEMS.forEach(item => {
+const taskId = `${stream}_${subject}_${safeName}_${item.id}`;
+const currentVal = (userData.progress && userData.progress[taskId]) || 0;
+const targetVal = chapter.targets ? chapter.targets[item.id] : 3;
+
+const itemDiv = document.createElement('div');
+itemDiv.className = 'bg-gray-50 border border-gray-200 p-2.5 rounded-xl flex items-center justify-between';
+itemDiv.innerHTML = `
+<span class="text-xs font-bold ${item.color}">${item.label}</span>
+<div class="flex items-center gap-2">
+<span class="text-xs font-black">${currentVal} / ${targetVal}</span>
+<div class="flex items-center gap-1">
+<button onclick="updateTaskCount('${taskId}', -1, ${targetVal})" class="w-6 h-6 bg-white border border-gray-300 rounded-lg font-bold text-xs hover:bg-gray-100 flex items-center justify-center">-</button>
+<button onclick="updateTaskCount('${taskId}', 1, ${targetVal})" class="w-6 h-6 bg-blue-600 text-white rounded-lg font-bold text-xs hover:bg-blue-700 flex items-center justify-center">+</button>
+</div>
+</div>
+`;
+checkGrid.appendChild(itemDiv);
+});
+
+chapterContainer.appendChild(checkGrid);
+chapterList.appendChild(chapterContainer);
+});
+
+subjectCard.appendChild(chapterList);
+container.appendChild(subjectCard);
+}
+
+updateOverallProgress(totalTasksAll, completedTasksAll);
+}
+
+window.updateTaskCount = async (taskId, delta, targetVal) => {
+if (!currentUser) return;
+if(!userData.progress) userData.progress = {};
+let current = userData.progress[taskId] || 0;
+current += delta;
+if(current < 0) current = 0;
+if(current > targetVal * 2) current = targetVal * 2;
+
+userData.progress[taskId] = current;
+renderDashboard();
+
+try {
+await setDoc(doc(db, 'users', currentUser.uid), { progress: { [taskId]: current } }, { merge: true });
+} catch (error) { console.error("Error saving progress:", error); }
+};
+
+function updateOverallProgress(total, completed) {
+const percentage = total === 0 ? 0 : Math.round((completed / total) * 100);
+document.getElementById('overall-percentage').innerText = `${percentage}%`;
+document.getElementById('progress-stats').innerText = `${completed} / ${total} Tasks`;
+const circumference = 2 * Math.PI * 15.9155;
+const dashOffset = circumference - (percentage / 100) * circumference;
+document.getElementById('overall-circle-progress').style.strokeDashoffset = dashOffset;
+}
+
+// --- DASHBOARD HOME FUNCTIONS ---
+function updateDashboardHome() {
+if(userData.targetDate) {
+document.getElementById('countdown-date-input').value = userData.targetDate;
+calculateCountdown(userData.targetDate);
+} else {
+document.getElementById('countdown-days-number').innerText = '--';
+}
+if(userData.dreamCollege) document.getElementById('dream-college-input').value = userData.dreamCollege;
+if(userData.dreamRank) document.getElementById('dream-rank-input').value = userData.dreamRank;
+renderTodaysGoals();
+}
+
+window.saveCountdownDate = async (dateStr) => {
+if(!currentUser) return;
+userData.targetDate = dateStr;
+calculateCountdown(dateStr);
+try { await setDoc(doc(db, 'users', currentUser.uid), { targetDate: dateStr }, { merge: true }); } catch(e) { console.error(e); }
+};
+
+function calculateCountdown(dateStr) {
+const target = new Date(dateStr);
+const today = new Date();
+today.setHours(0,0,0,0);
+const diffTime = target - today;
+const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+document.getElementById('countdown-days-number').innerText = diffDays >= 0 ? diffDays : '0';
+}
+
+window.saveDreamDetails = async () => {
+if(!currentUser) return;
+const college = document.getElementById('dream-college-input').value;
+const rank = document.getElementById('dream-rank-input').value;
+userData.dreamCollege = college;
+userData.dreamRank = rank;
+try {
+await setDoc(doc(db, 'users', currentUser.uid), { dreamCollege: college, dreamRank: rank }, { merge: true });
+} catch(e) { console.error(e); }
+};
+
+window.addTodaysGoal = async () => {
+if(!currentUser) return;
+const input = document.getElementById('new-goal-input');
+const text = input.value.trim();
+if(!text) return;
+
+const newGoal = { id: Date.now().toString(), text: text, completed: false };
+if(!userData.todaysGoals) userData.todaysGoals = [];
+userData.todaysGoals.push(newGoal);
+input.value = '';
+renderTodaysGoals();
+
+try { await setDoc(doc(db, 'users', currentUser.uid), { todaysGoals: userData.todaysGoals }, { merge: true }); } catch(e) { console.error(e); }
+};
+
+window.toggleGoalCheck = async (goalId, isChecked) => {
+if(!currentUser || !userData.todaysGoals) return;
+userData.todaysGoals = userData.todaysGoals.map(g => {
+if(g.id === goalId) g.completed = isChecked;
+return g;
+});
+renderTodaysGoals();
+try { await setDoc(doc(db, 'users', currentUser.uid), { todaysGoals: userData.todaysGoals }, { merge: true }); } catch(e) { console.error(e); }
+};
+
+window.deleteGoal = async (goalId) => {
+if(!currentUser || !userData.todaysGoals) return;
+userData.todaysGoals = userData.todaysGoals.filter(g => g.id !== goalId);
+renderTodaysGoals();
+try { await setDoc(doc(db, 'users', currentUser.uid), { todaysGoals: userData.todaysGoals }, { merge: true }); } catch(e) { console.error(e); }
+};
+
+window.resetTodaysGoals = async () => {
+if(!currentUser) return;
+if(!confirm("Reset all today's goals?")) return;
+userData.todaysGoals = [];
+renderTodaysGoals();
+try { await setDoc(doc(db, 'users', currentUser.uid), { todaysGoals: [] }, { merge: true }); } catch(e) { console.error(e); }
+};
+
+function renderTodaysGoals() {
+const container = document.getElementById('todays-goals-container');
+const badge = document.getElementById('todays-goal-progress-badge');
+container.innerHTML = '';
+
+const goals = userData.todaysGoals || [];
+if(goals.length === 0) {
+container.innerHTML = '<p class="text-center text-gray-400 text-xs py-8">No goals added for today yet.</p>';
+badge.innerText = '0/0 done';
+return;
+}
+
+let completedCount = 0;
+goals.forEach(goal => {
+if(goal.completed) completedCount++;
+const div = document.createElement('div');
+div.className = `flex items-center justify-between p-2.5 rounded-xl border ${goal.completed ? 'bg-gray-50 border-gray-200' : 'bg-white border-gray-200 shadow-sm'} transition`;
+div.innerHTML = `
+<label class="flex items-center gap-2.5 cursor-pointer overflow-hidden flex-grow mr-2">
+<input type="checkbox" class="accent-green-600 w-4 h-4 rounded" ${goal.completed ? 'checked' : ''} onchange="toggleGoalCheck('${goal.id}', this.checked)">
+<span class="text-xs font-semibold truncate ${goal.completed ? 'text-gray-400 line-through' : ''}">${goal.text}</span>
+</label>
+<button onclick="deleteGoal('${goal.id}')" class="text-gray-400 hover:text-red-500 text-xs p-1 transition"><i class="fa-solid fa-trash"></i></button>
+`;
+container.appendChild(div);
+});
+badge.innerText = `${completedCount}/${goals.length} done`;
+}
+
+// --- CHAPTER NOTES & RESOURCES MODULE ---
+window.openChapterNotesModal = (safeName, chapterName) => {
+activeNoteChapterId = safeName;
+document.getElementById('notes-chapter-title').innerText = `${chapterName} - Notes & Resources`;
+renderChapterNotesList();
+document.getElementById('notes-modal').classList.remove('hidden');
+};
+
+window.saveChapterNote = async () => {
+if(!currentUser || !activeNoteChapterId) return;
+const title = document.getElementById('note-title-input').value.trim();
+const link = document.getElementById('note-link-input').value.trim();
+if(!title || !link) { alert("Please enter title and URL/link."); return; }
+
+if(!userData.chapterNotes) userData.chapterNotes = {};
+if(!userData.chapterNotes[activeNoteChapterId]) userData.chapterNotes[activeNoteChapterId] = [];
+
+userData.chapterNotes[activeNoteChapterId].push({ id: Date.now().toString(), title, link });
+document.getElementById('note-title-input').value = '';
+document.getElementById('note-link-input').value = '';
+renderChapterNotesList();
+renderDashboard();
+
+try {
+await setDoc(doc(db, 'users', currentUser.uid), { chapterNotes: userData.chapterNotes }, { merge: true });
+} catch(e) { console.error(e); }
+};
+
+window.deleteChapterNote = async (noteId) => {
+if(!currentUser || !activeNoteChapterId) return;
+if(!userData.chapterNotes || !userData.chapterNotes[activeNoteChapterId]) return;
+
+userData.chapterNotes[activeNoteChapterId] = userData.chapterNotes[activeNoteChapterId].filter(n => n.id !== noteId);
+renderChapterNotesList();
+renderDashboard();
+
+try {
+await setDoc(doc(db, 'users', currentUser.uid), { chapterNotes: userData.chapterNotes }, { merge: true });
+} catch(e) { console.error(e); }
+};
+
+function renderChapterNotesList() {
+const container = document.getElementById('chapter-notes-list');
+container.innerHTML = '';
+const notes = (userData.chapterNotes && userData.chapterNotes[activeNoteChapterId]) || [];
+
+if(notes.length === 0) {
+container.innerHTML = '<p class="text-center text-gray-400 text-xs py-4">No notes added for this chapter yet.</p>';
+return;
+}
+
+notes.forEach(note => {
+const div = document.createElement('div');
+div.className = 'bg-white p-3 rounded-xl border border-gray-200 flex items-center justify-between shadow-sm text-xs';
+div.innerHTML = `
+<div class="overflow-hidden mr-2">
+<p class="font-bold truncate">${note.title}</p>
+<a href="${note.link}" target="_blank" class="text-blue-600 hover:underline truncate block text-[10px]">${note.link}</a>
+</div>
+<button onclick="deleteChapterNote('${note.id}')" class="text-gray-400 hover:text-red-500 p-1 flex-shrink-0"><i class="fa-solid fa-trash"></i></button>
+`;
+container.appendChild(div);
+});
+}
+
+// --- TEST MODULE ---
+window.startSundayTest = () => { document.getElementById('test-modal').classList.remove('hidden'); };
+window.closeTestModal = () => { document.getElementById('test-modal').classList.add('hidden'); };
+
+window.submitSimulatedTest = async () => {
+if (!currentUser) return;
+const score = parseInt(document.getElementById('simulated-score-input').value) || 0;
+const boundedScore = Math.min(Math.max(score, 0), 300);
+const accuracy = Math.round((boundedScore / 300) * 100);
+const rank = Math.floor(Math.random() * 2000) + 1;
+
+const testRecord = {
+name: `Mock Test #${(userData.testHistory || []).length + 1}`,
+date: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }),
+score: boundedScore,
+accuracy: accuracy + '%',
+rank: `#${rank}`
+};
+
+if(!userData.testHistory) userData.testHistory = [];
+userData.testHistory.unshift(testRecord);
+
+try {
+await setDoc(doc(db, 'users', currentUser.uid), { testHistory: userData.testHistory }, { merge: true });
+closeTestModal();
+renderTestHistory();
+alert(`Test submitted! Mock All India Rank: #${rank}`);
+} catch (error) { console.error(error); }
+};
+
+function renderTestHistory() {
+const history = userData.testHistory || [];
+const tbody = document.getElementById('test-history-table-body');
+tbody.innerHTML = '';
+
+if(history.length === 0) {
+tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-gray-400">No test attempts recorded yet.</td></tr>`;
+document.getElementById('best-test-score').innerText = '0 / 300';
+document.getElementById('stat-tests-count').innerText = '0';
+document.getElementById('stat-avg-score').innerText = '0%';
+document.getElementById('stat-rank').innerText = '--';
+return;
+}
+
+let maxScore = 0; let totalScoreSum = 0;
+history.forEach(test => {
+if(test.score > maxScore) maxScore = test.score;
+totalScoreSum += test.score;
+const tr = document.createElement('tr');
+tr.className = 'hover:bg-gray-50';
+tr.innerHTML = `
+<td class="p-4 font-bold">${test.name}</td>
+<td class="p-4 text-gray-500">${test.date}</td>
+<td class="p-4 font-black text-blue-600">${test.score} / 300</td>
+<td class="p-4 font-semibold">${test.accuracy}</td>
+<td class="p-4"><span class="bg-green-100 text-green-700 text-xs font-bold px-2.5 py-1 rounded-full">Rank ${test.rank}</span></td>
+`;
+tbody.appendChild(tr);
+});
+
+const avgScore = Math.round(totalScoreSum / history.length);
+document.getElementById('best-test-score').innerText = `${maxScore} / 300`;
+document.getElementById('stat-tests-count').innerText = history.length;
+document.getElementById('stat-avg-score').innerText = `${Math.round((avgScore / 300) * 100)}%`;
+document.getElementById('stat-rank').innerText = history[0].rank;
+}
+
+// --- VELOBOOK SOCIAL & INSTAGRAM STYLE MODULE ---
+function updateVelobookProfileUI() {
+const name = userData.displayName || currentUser.email.split('@')[0];
+document.getElementById('velobook-display-name').innerText = name;
+document.getElementById('velobook-my-handle').innerText = '@' + currentUser.email.split('@')[0];
+document.getElementById('velobook-profile-initial').innerText = name.substring(0,2).toUpperCase();
+document.getElementById('stat-followers-count').innerText = (userData.followers || []).length;
+document.getElementById('stat-following-count').innerText = (userData.following || []).length;
+}
+
+window.openEditProfileModal = () => {
+document.getElementById('edit-name-input').value = userData.displayName || currentUser.email.split('@')[0];
+document.getElementById('edit-profile-modal').classList.remove('hidden');
+};
+
+window.saveProfileName = async () => {
+if(!currentUser) return;
+const newName = document.getElementById('edit-name-input').value.trim();
+if(!newName) return;
+userData.displayName = newName;
+updateVelobookProfileUI();
+document.getElementById('edit-profile-modal').classList.add('hidden');
+try { await setDoc(doc(db, 'users', currentUser.uid), { displayName: newName }, { merge: true }); } catch(e){console.error(e);}
+};
+
+window.openCreatePostModal = () => { document.getElementById('create-post-modal').classList.remove('hidden'); };
+
+window.submitNewPost = async () => {
+if(!currentUser) return;
+const type = document.getElementById('post-type-select').value;
+const caption = document.getElementById('post-caption-input').value.trim();
+if(!caption) { alert("Please enter caption or update."); return; }
+
+const newPost = {
+id: Date.now().toString(),
+authorUid: currentUser.uid,
+authorName: userData.displayName || currentUser.email.split('@')[0],
+type: type,
+caption: caption,
+timestamp: Date.now()
+};
+
+if(!userData.posts) userData.posts = [];
+userData.posts.unshift(newPost);
+document.getElementById('post-caption-input').value = '';
+document.getElementById('create-post-modal').classList.add('hidden');
+
+try { await setDoc(doc(db, 'users', currentUser.uid), { posts: userData.posts }, { merge: true }); } catch(e){console.error(e);}
+};
+
+// FIXED: Instantly removes post/story from screen and Firestore
+window.deletePost = async (postId, authorUid) => {
+if(!currentUser) return;
+if(authorUid !== currentUser.uid) return;
+if(!confirm("Delete this post/story?")) return;
+
+userData.posts = userData.posts.filter(p => p.id !== postId);
+renderGlobalFeed(window.latestGlobalPosts.filter(p => p.id !== postId));
+
+try {
+await setDoc(doc(db, 'users', currentUser.uid), { posts: userData.posts }, { merge: true });
+} catch(e) { console.error(e); }
+};
+
+let peersUnsubscribe = null;
+function startLivePeersListener() {
+if(peersUnsubscribe) peersUnsubscribe();
+
+peersUnsubscribe = onSnapshot(collection(db, 'users'), (snapshot) => {
+allPeers = [];
+let allGlobalPosts = [];
+let myFollowersCount = 0;
+
+snapshot.forEach(docSnap => {
+const data = docSnap.data();
+if(data.uid) {
+if(data.uid !== currentUser.uid) {
+allPeers.push(data);
+// Check if this user follows me
+if(data.following && data.following.includes(currentUser.uid)) {
+myFollowersCount++;
+}
+} else {
+if(data.followers) {
+myFollowersCount = data.followers.length;
+}
+}
+if(data.posts && Array.isArray(data.posts)) {
+allGlobalPosts.push(...data.posts);
+}
+}
+});
+
+allGlobalPosts.sort((a,b) => b.timestamp - a.timestamp);
+window.latestGlobalPosts = allGlobalPosts;
+
+document.getElementById('stat-followers-count').innerText = myFollowersCount;
+document.getElementById('stat-following-count').innerText = (userData.following || []).length;
+document.getElementById('peer-count-badge').innerText = `${allPeers.length} users`;
+
+renderPeersList(allPeers);
+renderGlobalFeed(allGlobalPosts);
+});
+}
+
+window.filterPeers = (query) => {
+const q = query.toLowerCase().trim();
+const filtered = allPeers.filter(p => (p.email && p.email.toLowerCase().includes(q)) || (p.displayName && p.displayName.toLowerCase().includes(q)));
+renderPeersList(filtered);
+};
+
+function renderPeersList(peers) {
+const container = document.getElementById('peers-list-container');
+container.innerHTML = '';
+
+if(peers.length === 0) {
+container.innerHTML = '<p class="text-center text-gray-400 text-xs py-4">No other students found.</p>';
+return;
+}
+
+const following = userData.following || [];
+
+peers.forEach(peer => {
+const isFollowing = following.includes(peer.uid);
+const peerName = peer.displayName || peer.email.split('@')[0];
+
+const div = document.createElement('div');
+div.className = 'bg-white p-3 rounded-xl border border-gray-200 flex items-center justify-between shadow-sm';
+div.innerHTML = `
+<div class="flex items-center gap-2.5 overflow-hidden">
+<div class="w-8 h-8 bg-purple-50 text-purple-600 rounded-xl flex items-center justify-center font-bold text-xs flex-shrink-0">${peerName.substring(0,2).toUpperCase()}</div>
+<div class="overflow-hidden">
+<p class="font-bold text-xs truncate">@${peerName}</p>
+<p class="text-[10px] text-gray-400">${peer.stream || 'Aspirant'}</p>
+</div>
+</div>
+<div class="flex items-center gap-1.5 flex-shrink-0">
+${isFollowing ? `
+<button onclick="openChat('${peer.uid}', '${peerName}')" class="bg-green-50 text-green-600 hover:bg-green-100 text-xs font-bold px-2.5 py-1.5 rounded-lg transition mr-1" title="Chat"><i class="fa-solid fa-comment"></i></button>
+<button onclick="toggleFollow('${peer.uid}')" class="bg-gray-100 text-gray-600 hover:bg-gray-200 text-[10px] font-bold px-2.5 py-1.5 rounded-lg transition">Following</button>
+` : `
+<button onclick="toggleFollow('${peer.uid}')" class="bg-blue-600 text-white hover:bg-blue-700 text-[10px] font-bold px-2.5 py-1.5 rounded-lg transition">Follow</button>
+`}
+</div>
+`;
+container.appendChild(div);
+});
+}
+
+function renderGlobalFeed(posts) {
+const container = document.getElementById('velobook-feed-container');
+container.innerHTML = '';
+
+if(posts.length === 0) {
+container.innerHTML = '<p class="text-center text-gray-400 text-xs py-10">No posts or stories in feed yet.</p>';
+return;
+}
+
+posts.forEach(post => {
+const isMine = post.authorUid === currentUser.uid;
+const div = document.createElement('div');
+div.className = 'bg-white p-4 rounded-2xl border border-gray-200 shadow-sm space-y-2';
+div.innerHTML = `
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 bg-purple-100 text-purple-700 rounded-full flex items-center justify-center font-bold text-xs">${post.authorName.substring(0,2).toUpperCase()}</div>
+<div>
+<p class="font-bold text-xs">@${post.authorName}</p>
+<span class="text-[9px] bg-purple-50 text-purple-600 font-bold px-2 py-0.5 rounded uppercase">${post.type}</span>
+</div>
+</div>
+${isMine ? `<button onclick="deletePost('${post.id}', '${post.authorUid}')" class="text-gray-400 hover:text-red-500 text-xs cursor-pointer"><i class="fa-solid fa-trash"></i></button>` : ''}
+</div>
+<p class="text-xs font-medium">${post.caption}</p>
+`;
+container.appendChild(div);
+});
+}
+
+window.toggleFollow = async (peerUid) => {
+if(!currentUser) return;
+let following = userData.following || [];
+if(following.includes(peerUid)) {
+following = following.filter(id => id !== peerUid);
+} else {
+following.push(peerUid);
+}
+userData.following = following;
+updateVelobookProfileUI();
+try {
+await setDoc(doc(db, 'users', currentUser.uid), { following: following }, { merge: true });
+renderPeersList(allPeers);
+} catch (err) { console.error(err); }
+};
+
+window.openChat = (peerUid, peerName) => {
+activeChatPeer = { uid: peerUid, email: peerName };
+document.getElementById('active-chat-name').innerText = '@' + peerName;
+document.getElementById('active-chat-avatar').innerText = peerName.substring(0,2).toUpperCase();
+document.getElementById('active-chat-status').innerText = 'Connected peer';
+document.getElementById('chat-form').classList.remove('hidden');
+
+const chatId = [currentUser.uid, peerUid].sort().join('_');
+const messagesRef = collection(db, 'chats', chatId, 'messages');
+const q = query(messagesRef, orderBy('timestamp', 'asc'));
+
+if(chatUnsubscribe) chatUnsubscribe();
+
+chatUnsubscribe = onSnapshot(q, (snapshot) => {
+const msgContainer = document.getElementById('chat-messages-container');
+msgContainer.innerHTML = '';
+msgContainer.className = 'flex-grow overflow-y-auto p-4 space-y-3 bg-white rounded-xl border border-gray-200 my-3 flex flex-col items-start justify-start';
+
+if(snapshot.empty) {
+msgContainer.innerHTML = '<p class="text-xs text-gray-400 text-center w-full py-4">No messages yet. Say hi! 👋</p>';
+return;
+}
+
+snapshot.forEach(docSnap => {
+const msg = docSnap.data();
+const isMe = msg.senderId === currentUser.uid;
+const bubble = document.createElement('div');
+bubble.className = `max-w-[75%] p-3 rounded-2xl text-xs ${isMe ? 'bg-blue-600 text-white self-end rounded-br-none' : 'bg-gray-100 text-gray-800 self-start rounded-bl-none'}`;
+bubble.innerText = msg.text;
+msgContainer.appendChild(bubble);
+});
+msgContainer.scrollTop = msgContainer.scrollHeight;
+});
+};
+
+window.sendChatMessage = async (e) => {
+e.preventDefault();
+if(!currentUser || !activeChatPeer) return;
+const input = document.getElementById('chat-input-msg');
+const text = input.value.trim();
+if(!text) return;
+
+const chatId = [currentUser.uid, activeChatPeer.uid].sort().join('_');
+const messagesRef = collection(db, 'chats', chatId, 'messages');
+
+try {
+await addDoc(messagesRef, {
+senderId: currentUser.uid,
+text: text,
+timestamp: Date.now()
+});
+input.value = "";
+} catch (err) { console.error(err); }
+};
+</script>
+</body>
+</html>
